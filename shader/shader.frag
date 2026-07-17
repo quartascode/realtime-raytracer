@@ -9,6 +9,7 @@ uniform vec3 pixelDeltaV;
 uniform uint frameIndex;
 uniform int samplesPerPixel;
 uniform float pixelSampleScale;
+uniform int bounceLimit;
 
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;
@@ -28,11 +29,38 @@ uint Hash(uint x) {
 
 float Rand() {
 	rngState = Hash(rngState);
+	if (rngState == 0u) { rngState = 1u; }
 	return float(rngState) / (4294967295.0 + 1);
 }
 
 float MinMaxRand(float min, float max) {
 	return min + (max - min) * Rand();
+}
+
+vec3 RandVec3() {
+	return vec3(Rand(), Rand(), Rand());
+}
+
+vec3 MinMaxRandVec3(float min, float max) {
+	return vec3(MinMaxRand(min, max), MinMaxRand(min, max), MinMaxRand(min, max));
+}
+
+vec3 RandUnitVec() {
+	while (true) {
+		vec3 v = MinMaxRandVec3(-1.0, 1.0);
+		float lensqrd = dot(v, v);
+		if (lensqrd <= 1 && lensqrd > 1e-8) {
+			return v / sqrt(lensqrd);
+		}
+	}
+}
+
+vec3 RandOnHemisphere(vec3 normal) {
+	vec3 onUnitSphere = RandUnitVec();
+	if (dot(onUnitSphere, normal) < 0) {
+		return -onUnitSphere;
+	}
+	return onUnitSphere;
 }
 
 struct sphere {
@@ -125,15 +153,27 @@ bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
 }
 
 vec3 RayColor(in ray r) {
-	hitInfo info;
+	vec3 color = vec3(1.0);
 
-	if (Hit(r, 0, INFINITY, info)) {
-		return 0.5 * vec3(info.normal + vec3(1.0));
+	for (int i = 0; i < bounceLimit; i++) {
+		hitInfo info;
+		if (Hit(r, 0.001, INFINITY, info)) {
+			vec3 direction = RandOnHemisphere(info.normal);
+
+			color *= 0.5;
+
+			r.origin = info.hitPoint;
+			r.direction = direction;
+		} else {
+			vec3 unitDir = normalize(r.direction);
+			float a = 0.5 * (unitDir.y + 1.0);
+
+			vec3 background = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+
+			return color * background;
+		}
 	}
-
-	vec3 unitDir = normalize(r.direction);
-	float a = 0.5 * (unitDir.y + 1.0);
-	return (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+	return vec3(0.0);
 }
 
 void main() {
@@ -142,14 +182,14 @@ void main() {
 	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
 
-    rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + frameIndex;
+	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + frameIndex;
 
 	vec3 pixelColor = vec3(0, 0, 0);
 	for (int i = 0; i < samplesPerPixel; i++) {
 		ray r = GetRay(pixel.x, pixel.y);
 		pixelColor += RayColor(r);
 	}
-	
+
 	fragColor = vec4(pixelColor * pixelSampleScale, 1.0);
 
 }
