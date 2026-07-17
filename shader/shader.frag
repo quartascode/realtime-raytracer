@@ -6,6 +6,7 @@ uniform vec3 firstPixelPos;
 uniform vec3 cameraPosition;
 uniform vec3 pixelDeltaU;
 uniform vec3 pixelDeltaV;
+uniform uint frameIndex;
 
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;

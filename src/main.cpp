@@ -36,6 +36,7 @@ int main(void) {
 	int cameraPos_loc = GetShaderLocation(frag, "cameraPosition");
 	int pixelDeltaU_loc = GetShaderLocation(frag, "pixelDeltaU");
 	int pixelDeltaV_loc = GetShaderLocation(frag, "pixelDeltaV");
+	int frameIndex_loc = GetShaderLocation(frag, "frameIndex");
 
 	SetShaderValue(frag, firstPixel_loc, &firstPixelPos, SHADER_UNIFORM_VEC3);
 	SetShaderValue(frag, cameraPos_loc, &cameraCenter, SHADER_UNIFORM_VEC3);
