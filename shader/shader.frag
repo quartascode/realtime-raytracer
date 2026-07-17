@@ -7,6 +7,21 @@ uniform vec3 cameraPosition;
 uniform vec3 pixelDeltaU;
 uniform vec3 pixelDeltaV;
 
+const float PI = 3.14159265358979323846;
+const float INFINITY = 1e30;
+
+float DegreeToRadians(float theta) {
+	return theta * PI / 180.0;
+}
+
+struct Sphere {
+    vec3 center;
+    float radius;
+};
+const int SPHERE_COUNT = 3;
+Sphere spheres[SPHERE_COUNT];
+
+
 struct ray {
 	vec3 origin;
 	vec3 direction;
@@ -16,24 +31,62 @@ struct hitInfo {
 	vec3 hitPoint;
 	vec3 normal;
 	float t;
+	bool frontFace;
 };
 
 vec3 RayAt(in ray r, float t) {
 	return r.origin + t * r.direction;
 }
 
-float HitSphere(vec3 center, float radius, ray r) {
+void SetFaceNormal (ray r, vec3 outwardNormal, inout hitInfo inf) {
+	// NOTE: outwardNormal is assumed to be normalized
+
+	inf.frontFace = dot(r.direction, outwardNormal) < 0;
+	inf.normal = inf.frontFace ? outwardNormal : -outwardNormal;
+}
+
+bool HitSphere(vec3 center, float radius, ray r, float tMin, float tMax, inout info) {
 	vec3 oc = center - r.origin;
+
 	float a = dot(r.direction, r.direction);
 	float h = dot(r.direction, oc);
 	float c = dot(oc, oc) - radius * radius;
+
 	float discriminant = h*h - a*c;
 
 	if (discriminant < 0) {
-		return -1.0;
-	} else {
-		return (h - sqrt(discriminant)) / a;
+		return false;
 	}
+
+	float root = (h - sqrt(discriminant)) / a;
+	if (root <= tMin || root >= tMax) {
+		root = (h + sqrt(discriminant)) / a;
+		if (root <= tMin || root >= tMax) {
+			return false;
+		}
+	}
+
+	info.t = root;
+	info.hitPoint = RayAt(r, info.t);
+	outwardNormal = (info.hitPoint - center) / radius;
+	SetFaceNormal(r, outwardNormal, info);
+
+	return true;
+}
+
+bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
+	hitInfo tempInfo;
+	bool hitAnything = false;
+	float closestSoFar = tMax;
+
+	for (int i = 0; i < SPHERE_COUNT; i++) {
+		if (HitSphere(vec3(0, 0, -1), 0.5, r, tMin, closestSoFar, tempInfo)) {
+			hitAnything = true;
+			closestSoFar = tempInfo.t;
+			info = tempInfo;
+		}
+	}
+	return hitAnything;
 }
 
 vec3 RayColor(in ray r) {
@@ -50,7 +103,7 @@ vec3 RayColor(in ray r) {
 }
 
 void main() {
-    ivec2 pixel = ivec2(gl_FragCoord.xy);
+	ivec2 pixel = ivec2(gl_FragCoord.xy);
 
 	vec3 pixelCenter = firstPixelPos + (pixel.x * pixelDeltaU) + (pixel.y * pixelDeltaV);
 	vec3 rayDir = pixelCenter - cameraPosition;
