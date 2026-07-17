@@ -14,6 +14,23 @@ float DegreeToRadians(float theta) {
 	return theta * PI / 180.0;
 }
 
+uint rngState;
+float Hash(uint x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3bU;
+    x = ((x >> 16) ^ x) * 0x45d9f3bU;
+    x = (x >> 16) ^ x;
+    return x;
+}
+
+float Rand() {
+	rngState = Hash(rngState);
+	return float(rngState) / 4294967295.0 + 1;
+}
+
+float MinMaxRand(float min, float max) {
+	return min + (max - min) * Rand();
+}
+
 struct sphere {
     vec3 center;
     float radius;
@@ -110,6 +127,8 @@ void main() {
 
 	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
+
+    rngState = pixel.y * uint(1920) + pixel.x;
 
 	vec3 color = RayColor(r);
 
