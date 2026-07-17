@@ -15,6 +15,40 @@ uniform int bounceLimit;
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;
 
+const int LAMBERTIAN  = 0;
+const int METAL       = 1;
+const int DIELETRIC   = 2;
+const int LIGHT_SORCE = 3;
+
+struct material {
+	int type;
+	vec3 albedo;
+    float fuzz;
+    float refractionIndex;
+    vec3 emissionColor;
+    float emissionStrength;
+};
+
+struct sphere {
+    vec3 center;
+    float radius;
+	material material;
+};
+const int SPHERE_COUNT = 2;
+sphere spheres[SPHERE_COUNT];
+
+struct ray {
+	vec3 origin;
+	vec3 direction;
+};
+
+struct hitInfo {
+	vec3 hitPoint;
+	vec3 normal;
+	float t;
+	bool frontFace;
+	material material;
+};
 
 float DegreeToRadians(float theta) {
 	return theta * PI / 180.0;
@@ -67,26 +101,6 @@ vec3 RandOnHemisphere(vec3 normal) {
 	return onUnitSphere;
 }
 
-struct sphere {
-    vec3 center;
-    float radius;
-};
-const int SPHERE_COUNT = 2;
-sphere spheres[SPHERE_COUNT];
-
-
-struct ray {
-	vec3 origin;
-	vec3 direction;
-};
-
-struct hitInfo {
-	vec3 hitPoint;
-	vec3 normal;
-	float t;
-	bool frontFace;
-};
-
 vec3 RayAt(in ray r, float t) {
 	return r.origin + t * r.direction;
 }
@@ -137,6 +151,7 @@ bool HitSphere(sphere s, ray r, float tMin, float tMax, inout hitInfo info) {
 	info.hitPoint = RayAt(r, info.t);
 	vec3 outwardNormal = (info.hitPoint - s.center) / s.radius;
 	SetFaceNormal(r, outwardNormal, info);
+	info.material = s.material;
 
 	return true;
 }
@@ -183,8 +198,16 @@ vec3 RayColor(in ray r) {
 void main() {
 	ivec2 pixel = ivec2(gl_FragCoord.xy);
 
-	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
-	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
+	material blueLamb;
+	blueLamb.type = LAMBERTIAN;
+	blueLamb.albedo = vec3(0, 0, 1);
+
+	material greyLamb;
+	greyLamb.type = LAMBERTIAN;
+	greyLamb.albedo = vec3(0.4, 0.4, 0.4);
+
+	spheres[0] = sphere(vec3(0, 0, -1), 0.5, blueLamb);
+	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
