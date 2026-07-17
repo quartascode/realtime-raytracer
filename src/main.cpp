@@ -37,6 +37,7 @@ int main(void) {
 	ToggleFullscreen();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");
+	Shader display = LoadShader(nullptr, "shader/display.frag");
 
 	// shader shit
 	int firstPixel_loc = GetShaderLocation(frag, "firstPixelPos");
@@ -81,7 +82,10 @@ int main(void) {
 			EndShaderMode();
 			EndTextureMode();
 
-			DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(imageWidth), -float(imageHeight)}, Vector2{0, 0}, WHITE);
+			BeginShaderMode(display);
+				DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(imageWidth), -float(imageHeight)}, Vector2{0, 0}, WHITE);
+			EndShaderMode();
+
 			DrawFPS(10, 10);
 
 		EndDrawing();
@@ -90,6 +94,7 @@ int main(void) {
 	}
 
 	UnloadShader(frag);
+	UnloadShader(display);
 	CloseWindow();
 
 	return 0;
