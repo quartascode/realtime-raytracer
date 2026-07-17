@@ -7,16 +7,19 @@ uniform vec3 cameraPosition;
 uniform vec3 pixelDeltaU;
 uniform vec3 pixelDeltaV;
 uniform uint frameIndex;
+uniform int samplesPerPixel;
+uniform float pixelSampleScale;
 
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;
+
 
 float DegreeToRadians(float theta) {
 	return theta * PI / 180.0;
 }
 
 uint rngState;
-float Hash(uint x) {
+uint Hash(uint x) {
     x = ((x >> 16) ^ x) * 0x45d9f3bU;
     x = ((x >> 16) ^ x) * 0x45d9f3bU;
     x = (x >> 16) ^ x;
@@ -25,7 +28,7 @@ float Hash(uint x) {
 
 float Rand() {
 	rngState = Hash(rngState);
-	return float(rngState) / 4294967295.0 + 1;
+	return float(rngState) / (4294967295.0 + 1);
 }
 
 float MinMaxRand(float min, float max) {
@@ -54,6 +57,20 @@ struct hitInfo {
 
 vec3 RayAt(in ray r, float t) {
 	return r.origin + t * r.direction;
+}
+
+vec3 SampleSquare() {
+	return vec3(Rand() - 0.5, Rand() - 0.5, 0);
+}
+
+ray GetRay(int x, int y) {
+	vec3 offset = SampleSquare();
+	vec3 pixelSample = firstPixelPos + ((x + offset.x) * pixelDeltaU) + ((y + offset.y) * pixelDeltaV);
+
+	vec3 rayOrigin = cameraPosition;
+	vec3 rayDirection = pixelSample - rayOrigin;
+
+	return ray(rayOrigin, rayDirection);
 }
 
 void SetFaceNormal (ray r, vec3 outwardNormal, inout hitInfo inf) {
@@ -122,17 +139,17 @@ vec3 RayColor(in ray r) {
 void main() {
 	ivec2 pixel = ivec2(gl_FragCoord.xy);
 
-	vec3 pixelCenter = firstPixelPos + (pixel.x * pixelDeltaU) + (pixel.y * pixelDeltaV);
-	vec3 rayDir = pixelCenter - cameraPosition;
-	ray r = ray(cameraPosition, rayDir);
-
 	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
 
-    rngState = pixel.y * uint(1920) + pixel.x;
+    rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + frameIndex;
 
-	vec3 color = RayColor(r);
-
-	fragColor = vec4(color, 1.0);
+	vec3 pixelColor = vec3(0, 0, 0);
+	for (int i = 0; i < samplesPerPixel; i++) {
+		ray r = GetRay(pixel.x, pixel.y);
+		pixelColor += RayColor(r);
+	}
+	
+	fragColor = vec4(pixelColor * pixelSampleScale, 1.0);
 
 }
