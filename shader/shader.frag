@@ -38,6 +38,12 @@ float MinMaxRand(float min, float max) {
 	return min + (max - min) * Rand();
 }
 
+float RandNormalDist() {
+	float theta = 2 * PI * Rand();
+	float rho = sqrt(-2 * log(Rand()));
+	return rho * cos(theta);
+}
+
 vec3 RandVec3() {
 	return vec3(Rand(), Rand(), Rand());
 }
@@ -47,13 +53,10 @@ vec3 MinMaxRandVec3(float min, float max) {
 }
 
 vec3 RandUnitVec() {
-	while (true) {
-		vec3 v = MinMaxRandVec3(-1.0, 1.0);
-		float lensqrd = dot(v, v);
-		if (lensqrd <= 1 && lensqrd > 1e-8) {
-			return v / sqrt(lensqrd);
-		}
-	}
+	float x = RandNormalDist();
+	float y = RandNormalDist();
+	float z = RandNormalDist();
+	return normalize(vec3(x, y, z));
 }
 
 vec3 RandOnHemisphere(vec3 normal) {
@@ -156,7 +159,7 @@ bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
 
-	for (int i = 0; i < bounceLimit; i++) {
+	for (int i = 0; i <= bounceLimit; i++) {
 		hitInfo info;
 		if (Hit(r, 0.001, INFINITY, info)) {
 			vec3 direction = info.normal + RandUnitVec();
@@ -197,7 +200,10 @@ void main() {
 
 	float frame = float(frameIndex);
 
-	vec3 accumulated = (previousColor * frame + pixelColor) / (frame + 1.0);
+	float weight = 1.0 / (frame + 1);
+	vec3 accumulated = previousColor * (1 - weight) + pixelColor * weight;
+
+	//vec3 accumulated = (previousColor * frame + pixelColor) / (frame + 1.0);
 
 	fragColor = vec4(accumulated, 1.0);
 

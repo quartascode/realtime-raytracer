@@ -1,5 +1,32 @@
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
+
+RenderTexture2D LoadFloatRenderTexture(int width, int height) {
+	RenderTexture2D target = {};
+
+	target.id = rlLoadFramebuffer();
+
+	if (target.id > 0) {
+		rlEnableFramebuffer(target.id);
+		target.texture.id = rlLoadTexture(nullptr, width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32, 1);
+
+		target.texture.width = width;
+		target.texture.height = height;
+		target.texture.mipmaps = 1;
+		target.texture.format = PIXELFORMAT_UNCOMPRESSED_R32G32B32A32;
+
+		rlFramebufferAttach(target.id, target.texture.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
+
+		if (!rlFramebufferComplete(target.id)) {
+			TraceLog(LOG_ERROR, "Framebuffer float incomplete");
+		}
+
+		rlDisableFramebuffer();
+	}
+
+	return target;
+}
 
 int main(void) {
 
@@ -27,7 +54,7 @@ int main(void) {
 	int samplesPerPixel = 10;
 	float pixelSampleScale = 1.0 / samplesPerPixel;
 
-	int bounceLimit = 30;
+	int bounceLimit = 50;
 
 	int frameIndex = 0;
 
@@ -59,8 +86,8 @@ int main(void) {
 	SetShaderValue(frag, bounceLimit_loc, &bounceLimit, SHADER_UNIFORM_INT);
 
 	RenderTexture2D accum[2] = {
-		LoadRenderTexture(imageWidth, imageHeight),
-		LoadRenderTexture(imageWidth, imageHeight),
+		LoadFloatRenderTexture(imageWidth, imageHeight),
+		LoadFloatRenderTexture(imageWidth, imageHeight),
 	};
 
 	int current = 0;
