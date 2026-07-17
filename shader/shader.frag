@@ -6,7 +6,8 @@ uniform vec3 firstPixelPos;
 uniform vec3 cameraPosition;
 uniform vec3 pixelDeltaU;
 uniform vec3 pixelDeltaV;
-uniform uint frameIndex;
+uniform int frameIndex;
+uniform sampler2D previousFrame;
 uniform int samplesPerPixel;
 uniform float pixelSampleScale;
 uniform int bounceLimit;
@@ -182,7 +183,7 @@ void main() {
 	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
 
-	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + frameIndex;
+	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
 	vec3 pixelColor = vec3(0, 0, 0);
 	for (int i = 0; i < samplesPerPixel; i++) {
@@ -190,6 +191,14 @@ void main() {
 		pixelColor += RayColor(r);
 	}
 
-	fragColor = vec4(pixelColor * pixelSampleScale, 1.0);
+	pixelColor *= pixelSampleScale;
+
+	vec3 previousColor = texelFetch(previousFrame, pixel, 0).rgb;
+
+	float frame = float(frameIndex);
+
+	vec3 accumulated = (previousColor * frame + pixelColor) / (frame + 1.0);
+
+	fragColor = vec4(accumulated, 1.0);
 
 }

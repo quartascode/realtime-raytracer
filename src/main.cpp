@@ -24,16 +24,16 @@ int main(void) {
 	Vector3 viewportLowerLeft = cameraCenter - Vector3{0, 0, focalLength} - viewportU/2 - viewportV/2;
 	Vector3 firstPixelPos = viewportLowerLeft + (pixelDeltaU + pixelDeltaV) * 0.5f;
 
-	int samplesPerPixel = 100;
+	int samplesPerPixel = 10;
 	float pixelSampleScale = 1.0 / samplesPerPixel;
 
-	int bounceLimit = 50;
+	int bounceLimit = 30;
 
 	int frameIndex = 0;
 
 	// raylib
 	InitWindow(imageWidth, imageHeight, "raytracer");
-	SetTargetFPS(180);
+	SetTargetFPS(60);
 	ToggleFullscreen();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");
@@ -44,6 +44,7 @@ int main(void) {
 	int pixelDeltaU_loc = GetShaderLocation(frag, "pixelDeltaU");
 	int pixelDeltaV_loc = GetShaderLocation(frag, "pixelDeltaV");
 	int frameIndex_loc = GetShaderLocation(frag, "frameIndex");
+	int previousFrame_loc = GetShaderLocation(frag, "previousFrame");
 	int samplesPerPixel_loc = GetShaderLocation(frag, "samplesPerPixel");
 	int pixelSampleScale_loc = GetShaderLocation(frag, "pixelSampleScale");
 	int bounceLimit_loc = GetShaderLocation(frag, "bounceLimit");
@@ -52,23 +53,40 @@ int main(void) {
 	SetShaderValue(frag, cameraPos_loc, &cameraCenter, SHADER_UNIFORM_VEC3);
 	SetShaderValue(frag, pixelDeltaU_loc, &pixelDeltaU, SHADER_UNIFORM_VEC3);
 	SetShaderValue(frag, pixelDeltaV_loc, &pixelDeltaV, SHADER_UNIFORM_VEC3);
-	SetShaderValue(frag, frameIndex_loc, &frameIndex, SHADER_UNIFORM_INT);
 	SetShaderValue(frag, samplesPerPixel_loc, &samplesPerPixel, SHADER_UNIFORM_INT);
 	SetShaderValue(frag, pixelSampleScale_loc, &pixelSampleScale, SHADER_UNIFORM_FLOAT);
 	SetShaderValue(frag, bounceLimit_loc, &bounceLimit, SHADER_UNIFORM_INT);
 
+	RenderTexture2D accum[2] = {
+		LoadRenderTexture(imageWidth, imageHeight),
+		LoadRenderTexture(imageWidth, imageHeight),
+	};
+
+	int current = 0;
+
 	while (!WindowShouldClose()) {
-		frameIndex++;
-		
+		int previous = current;
+		current = 1 - current;
+
 		BeginDrawing();
 			ClearBackground(BLACK);
+			BeginTextureMode(accum[current]);
+			BeginShaderMode(frag);
 
-		BeginShaderMode(frag);
-			DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
-		EndShaderMode();
+			SetShaderValueTexture(frag, previousFrame_loc, accum[previous].texture);
+			SetShaderValue(frag, frameIndex_loc, &frameIndex, SHADER_UNIFORM_INT);
+		
+				DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
 
-		//DrawFPS(10, 10);
+			EndShaderMode();
+			EndTextureMode();
+
+			DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(imageWidth), -float(imageHeight)}, Vector2{0, 0}, WHITE);
+			DrawFPS(10, 10);
+
 		EndDrawing();
+
+		frameIndex++;
 	}
 
 	UnloadShader(frag);
