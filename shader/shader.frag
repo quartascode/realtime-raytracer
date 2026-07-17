@@ -159,7 +159,7 @@ vec3 RayColor(in ray r) {
 	for (int i = 0; i < bounceLimit; i++) {
 		hitInfo info;
 		if (Hit(r, 0.001, INFINITY, info)) {
-			vec3 direction = RandOnHemisphere(info.normal);
+			vec3 direction = info.normal + RandUnitVec();
 
 			color *= 0.5;
 
