@@ -14,12 +14,12 @@ float DegreeToRadians(float theta) {
 	return theta * PI / 180.0;
 }
 
-struct Sphere {
+struct sphere {
     vec3 center;
     float radius;
 };
-const int SPHERE_COUNT = 3;
-Sphere spheres[SPHERE_COUNT];
+const int SPHERE_COUNT = 2;
+sphere spheres[SPHERE_COUNT];
 
 
 struct ray {
@@ -45,12 +45,12 @@ void SetFaceNormal (ray r, vec3 outwardNormal, inout hitInfo inf) {
 	inf.normal = inf.frontFace ? outwardNormal : -outwardNormal;
 }
 
-bool HitSphere(vec3 center, float radius, ray r, float tMin, float tMax, inout info) {
-	vec3 oc = center - r.origin;
+bool HitSphere(sphere s, ray r, float tMin, float tMax, inout hitInfo info) {
+	vec3 oc = s.center - r.origin;
 
 	float a = dot(r.direction, r.direction);
 	float h = dot(r.direction, oc);
-	float c = dot(oc, oc) - radius * radius;
+	float c = dot(oc, oc) - s.radius * s.radius;
 
 	float discriminant = h*h - a*c;
 
@@ -68,7 +68,7 @@ bool HitSphere(vec3 center, float radius, ray r, float tMin, float tMax, inout i
 
 	info.t = root;
 	info.hitPoint = RayAt(r, info.t);
-	outwardNormal = (info.hitPoint - center) / radius;
+	vec3 outwardNormal = (info.hitPoint - s.center) / s.radius;
 	SetFaceNormal(r, outwardNormal, info);
 
 	return true;
@@ -80,7 +80,7 @@ bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
 	float closestSoFar = tMax;
 
 	for (int i = 0; i < SPHERE_COUNT; i++) {
-		if (HitSphere(vec3(0, 0, -1), 0.5, r, tMin, closestSoFar, tempInfo)) {
+		if (HitSphere(spheres[i], r, tMin, closestSoFar, tempInfo)) {
 			hitAnything = true;
 			closestSoFar = tempInfo.t;
 			info = tempInfo;
@@ -90,11 +90,10 @@ bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
 }
 
 vec3 RayColor(in ray r) {
-	float t = HitSphere(vec3(0, 0, -1), 0.5, r);
+	hitInfo info;
 
-	if (t > 0.0) {
-		vec3 N = normalize(RayAt(r, t) - vec3(0, 0, -1));
-		return 0.5 * vec3(N.x + 1, N.y + 1, N.z + 1);
+	if (Hit(r, 0, INFINITY, info)) {
+		return 0.5 * vec3(info.normal + vec3(1.0));
 	}
 
 	vec3 unitDir = normalize(r.direction);
@@ -108,6 +107,9 @@ void main() {
 	vec3 pixelCenter = firstPixelPos + (pixel.x * pixelDeltaU) + (pixel.y * pixelDeltaV);
 	vec3 rayDir = pixelCenter - cameraPosition;
 	ray r = ray(cameraPosition, rayDir);
+
+	spheres[0] = sphere(vec3(0, 0, -1), 0.5);
+	spheres[1] = sphere(vec3(0, -100.5, -1), 100);
 
 	vec3 color = RayColor(r);
 
