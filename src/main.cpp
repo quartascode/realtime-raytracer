@@ -29,7 +29,7 @@ int main(void) {
 	SetTargetFPS(180);
 	ToggleFullscreen();
 
-	Shader frag = LoadShader(nullptr, "shader.frag");
+	Shader frag = LoadShader(nullptr, "shader/shader.frag");
 
 	// shader shit
 	int firstPixel_loc = GetShaderLocation(frag, "firstPixelPos");
