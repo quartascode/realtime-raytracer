@@ -20,7 +20,7 @@ int main(void) {
 	InitWindow(cam.imageWidth, cam.imageHeight, "raytracer");
 	SetTargetFPS(60);
 	ToggleFullscreen();
-	HideCursor();
+	DisableCursor();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");
 	Shader display = LoadShader(nullptr, "shader/display.frag");
@@ -83,9 +83,9 @@ int main(void) {
 		} else {
 			speed = velocity;
 		}
-
 		if (IsKeyDown(KEY_W)) {
 			cam.position -= cam.w * speed * dt;
+			cam.lookAt   -= cam.w * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -95,6 +95,7 @@ int main(void) {
 		}
 		if (IsKeyDown(KEY_S)) {
 			cam.position += cam.w * speed * dt;
+			cam.lookAt   += cam.w * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -104,6 +105,7 @@ int main(void) {
 		}
 		if (IsKeyDown(KEY_A)) {
 			cam.position -= cam.u * speed * dt;
+			cam.lookAt   -= cam.u * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -113,6 +115,7 @@ int main(void) {
 		}
 		if (IsKeyDown(KEY_D)) {
 			cam.position += cam.u * speed * dt;
+			cam.lookAt   += cam.u * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -122,6 +125,7 @@ int main(void) {
 		}
 		if (IsKeyDown(KEY_SPACE)) {
 			cam.position.y += speed * dt;
+			cam.lookAt.y   += speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -131,6 +135,7 @@ int main(void) {
 		}
 		if (IsKeyDown(KEY_C)) {
 			cam.position.y -= speed * dt;
+			cam.lookAt.y   -= speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -209,6 +214,16 @@ int main(void) {
 
 			ExportImage(image, "render.png");
 			UnloadImage(image);
+		}
+		Vector2 mouseDelta = GetMouseDelta();
+		if (mouseDelta.x != 0 || mouseDelta.y != 0) {
+			cam.UpdateLook();
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
 		}
 
 		BeginDrawing();

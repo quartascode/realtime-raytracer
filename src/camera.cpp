@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include <algorithm>
 #include <cmath>
 #include <raylib.h>
 #include <raymath.h>
@@ -30,6 +31,23 @@ void SimCamera::Initialize() {
 	float defocusRadius = focusDist * tan(alpha / 2);
 	defocusDiskU = u * defocusRadius;
 	defocusDiskV = v * defocusRadius;
+}
+
+void SimCamera::UpdateLook() {
+	Vector2 mouseDelta = GetMouseDelta();
+
+	yaw   += mouseDelta.x * sensitivity;
+	pitch -= mouseDelta.y * sensitivity;
+
+	pitch = std::clamp(pitch, -89.0f, 89.0f);
+
+	float yawRad = yaw * DEG2RAD;
+	float pitchRad = pitch * DEG2RAD;
+
+	Vector3 dir = {cosf(yawRad) * cosf(pitchRad), sinf(pitchRad), sinf(yawRad) * cosf(pitchRad)};
+	dir = Vector3Normalize(dir);
+
+	lookAt = position + dir;
 }
 
 void SimCamera::Update() {
