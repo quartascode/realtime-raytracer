@@ -60,7 +60,7 @@ int main(void) {
 
 	// raylib
 	InitWindow(imageWidth, imageHeight, "raytracer");
-	SetTargetFPS(60);
+	SetTargetFPS(0);
 	ToggleFullscreen();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");

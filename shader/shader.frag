@@ -193,6 +193,7 @@ void LambertianScatter(inout hitInfo info, inout vec3 attenuation, inout ray sca
 
 void MetalScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout ray scattered) {
 	vec3 reflected = reflect(r.direction, info.normal);
+	reflected = normalize(reflected) + (info.material.fuzz * RandUnitVec());
 	scattered = ray(info.hitPoint, reflected);
 	attenuation = info.material.albedo;
 }
@@ -227,7 +228,7 @@ vec3 RayColor(in ray r) {
 			vec3 unitDir = normalize(r.direction);
 			float a = 0.5 * (unitDir.y + 1.0);
 
-			vec3 background = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.3, 0.5, 1.0);
+			vec3 background = (1.0 - a) * vec3(0.7, 0.7, 0.7) + a * vec3(0.3, 0.5, 0.9);
 			//vec3 background = vec3(0.0);
 
 			return color * background;
@@ -241,11 +242,16 @@ void main() {
 
 	material blueLamb;
 	blueLamb.type = LAMBERTIAN;
-	blueLamb.albedo = vec3(0, 0, 1);
+	blueLamb.albedo = vec3(0.1, 0.1, 1);
 
-	material greyLamb;
-	greyLamb.type = LAMBERTIAN;
+	material redLamb = blueLamb;
+	redLamb.albedo = vec3(1, 0.1, 0.1);
+
+	material greyLamb = blueLamb;
 	greyLamb.albedo = vec3(0.651, 0.651, 0.651);
+
+	material whiteLamb = blueLamb;
+	whiteLamb.albedo = vec3(1);
 
 	material light;
 	light.type = LIGHT_SOURCE;
@@ -255,11 +261,16 @@ void main() {
 	material mirror;
 	mirror.type = METAL;
 	mirror.albedo = vec3(1);	
+	mirror.fuzz = 0;
 
+	material gold = mirror;
+	gold.albedo = vec3(0.827, 0.686, 0.245);
+	gold.fuzz = 0.4;
+
+	spheres[0] = sphere(vec3(0, 0, -1.75), 0.5, gold);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
-	spheres[2] = sphere(vec3(1, 0, -1), 0.5, blueLamb);
-	spheres[0] = sphere(vec3(0, 0, -1), 0.5, mirror);
-	spheres[3] = sphere(vec3(-1, 0, -1), 0.5, blueLamb);
+	spheres[2] = sphere(vec3(1, 0, -1.5), 0.5, blueLamb);
+	spheres[3] = sphere(vec3(-1, 0, -1.5), 0.5, redLamb);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
