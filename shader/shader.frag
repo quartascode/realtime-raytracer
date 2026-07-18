@@ -106,6 +106,10 @@ bool Vec3NearZero(vec3 v) {
 	return (abs(v.x) < s) && (abs(v.y) < s) && (abs(v.z) < s);
 }
 
+vec3 Reflect(vec3 v, vec3 n) {
+	return v - 2 * dot(v, n) * n;
+}
+
 vec3 RayAt(in ray r, float t) {
 	return r.origin + t * r.direction;
 }
@@ -187,6 +191,12 @@ void LambertianScatter(inout hitInfo info, inout vec3 attenuation, inout ray sca
 	attenuation = info.material.albedo;
 }
 
+void MetalScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout ray scattered) {
+	vec3 reflected = reflect(r.direction, info.normal);
+	scattered = ray(info.hitPoint, reflected);
+	attenuation = info.material.albedo;
+}
+
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
 
@@ -202,6 +212,8 @@ vec3 RayColor(in ray r) {
 					color *= attenuation;
 					break;
 				case METAL:
+					MetalScatter(r, info, attenuation, r);
+					color *= attenuation;
 					break;
 				case DIELECTRIC:
 					break;
@@ -240,9 +252,13 @@ void main() {
 	light.emissionColor = vec3(1.0, 1.0, 1.0);
 	light.emissionStrength = 5.0;
 
-	spheres[0] = sphere(vec3(0, 0, -1), 0.5, blueLamb);
+	material mirror;
+	mirror.type = METAL;
+	mirror.albedo = vec3(1);	
+
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
 	spheres[2] = sphere(vec3(1, 0, -1), 0.5, blueLamb);
+	spheres[0] = sphere(vec3(0, 0, -1), 0.5, mirror);
 	spheres[3] = sphere(vec3(-1, 0, -1), 0.5, blueLamb);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
