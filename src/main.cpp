@@ -51,7 +51,8 @@ int main(void) {
 
 	int current = 0;
 
-	float speed = 1;
+	float velocity = 1;
+	float speed;
 
 	while (!WindowShouldClose()) {
 		int previous = current;
@@ -69,8 +70,14 @@ int main(void) {
 
 		float dt = GetFrameTime();
 
+		if (IsKeyDown(KEY_LEFT_SHIFT)) {
+			speed = velocity * 10;
+		} else {
+			speed = velocity;
+		}
+
 		if (IsKeyDown(KEY_W)) {
-			cam.position.z -= speed * dt;
+			cam.position -= cam.w * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -79,7 +86,7 @@ int main(void) {
 			frameIndex = 0;
 		}
 		if (IsKeyDown(KEY_S)) {
-			cam.position.z += speed * dt;
+			cam.position += cam.w * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -88,7 +95,7 @@ int main(void) {
 			frameIndex = 0;
 		}
 		if (IsKeyDown(KEY_A)) {
-			cam.position.x -= speed * dt;
+			cam.position -= cam.u * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -97,7 +104,7 @@ int main(void) {
 			frameIndex = 0;
 		}
 		if (IsKeyDown(KEY_D)) {
-			cam.position.x += speed * dt;
+			cam.position += cam.u * speed * dt;
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
@@ -114,8 +121,17 @@ int main(void) {
 			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
 			frameIndex = 0;
 		}
-		if (IsKeyDown(KEY_LEFT_SHIFT)) {
+		if (IsKeyDown(KEY_C)) {
 			cam.position.y -= speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyPressed(KEY_R)) {
+			cam.position = {0, 0, 0};
 			cam.Initialize();
 			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
