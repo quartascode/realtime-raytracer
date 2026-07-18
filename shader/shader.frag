@@ -110,6 +110,12 @@ vec3 Reflect(vec3 v, vec3 n) {
 	return v - 2 * dot(v, n) * n;
 }
 
+float Reflactance(float cos, float ri) {
+	float r0 = (1 - ri) / (1 + ri);
+	r0 = r0 * r0;
+	return r0 + (1 - r0) * pow((1 - cos), 5);
+}
+
 vec3 Refract(vec3 v, vec3 n, float nRatio) {
 	float cosTheta = min(dot(-v, n), 1.0);
 	vec3 perpendicular = nRatio * (v + cosTheta * n);
@@ -212,13 +218,13 @@ void DielectricScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout 
 	float cosTheta = min(dot(-unitDir, info.normal), 1.0);
 	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
-	bool canRefract = !(ri * sinTheta > 1.0);
+	bool cannotRefract = ri * sinTheta > 1.0;
 	vec3 dir;
 
-	if (canRefract) {
-		dir = Refract(unitDir, info.normal, ri);
-	} else {
+	if (cannotRefract || Reflactance(cosTheta, ri) > Rand()) {
 		dir = Reflect(unitDir, info.normal);
+	} else {
+		dir = Refract(unitDir, info.normal, ri);
 	}
 
 	scattered = ray(info.hitPoint, dir);
