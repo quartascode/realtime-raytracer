@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include <cmath>
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -9,8 +10,7 @@ void SimCamera::Initialize() {
 
 	float theta = vFov * PI / 180.0f;
 	float h = tan(theta / 2);
-	float focalLength = Vector3Length(position - lookAt);
-	float viewportHeight = 2.0 * h * focalLength;
+	float viewportHeight = 2.0 * h * focusDist;
 	float viewportWidth = viewportHeight * (float(imageWidth) / imageHeight);
 
 	w = Vector3Normalize(position - lookAt);
@@ -23,8 +23,13 @@ void SimCamera::Initialize() {
 	pixelDeltaU = viewportU / imageWidth;
 	pixelDeltaV = viewportV / imageHeight;
 
-	Vector3 viewportLowerLeft = position - (w * focalLength) - viewportU/2 - viewportV/2;
+	Vector3 viewportLowerLeft = position - (w * focusDist) - viewportU/2 - viewportV/2;
 	firstPixelPos = viewportLowerLeft + (pixelDeltaU + pixelDeltaV) * 0.5f;
+
+	float alpha = defocusAngle * PI / 180.0f;
+	float defocusRadius = focusDist * tan(alpha / 2);
+	defocusDiskU = u * defocusRadius;
+	defocusDiskV = v * defocusRadius;
 }
 
 void SimCamera::Update() {

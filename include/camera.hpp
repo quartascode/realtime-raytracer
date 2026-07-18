@@ -16,6 +16,11 @@ struct SimCamera {
 	Vector3 pixelDeltaV;
 	float vFov = 60;
 
+	float defocusAngle = 0;
+	float focusDist = 1;
+	Vector3 defocusDiskU;
+	Vector3 defocusDiskV;
+
 	void Initialize();
 
 	void Update();

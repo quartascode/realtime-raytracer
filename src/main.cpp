@@ -35,6 +35,9 @@ int main(void) {
 	int samplesPerPixel_loc = GetShaderLocation(frag, "samplesPerPixel");
 	int pixelSampleScale_loc = GetShaderLocation(frag, "pixelSampleScale");
 	int bounceLimit_loc = GetShaderLocation(frag, "bounceLimit");
+	int defocusDiskU_loc = GetShaderLocation(frag, "defocusDiskU");
+	int defocusDiskV_loc = GetShaderLocation(frag, "defocusDiskV");
+	int defocusAngle_loc = GetShaderLocation(frag, "defocusAngle");
 
 	SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
 	SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
@@ -43,11 +46,16 @@ int main(void) {
 	SetShaderValue(frag, samplesPerPixel_loc, &samplesPerPixel, SHADER_UNIFORM_INT);
 	SetShaderValue(frag, pixelSampleScale_loc, &pixelSampleScale, SHADER_UNIFORM_FLOAT);
 	SetShaderValue(frag, bounceLimit_loc, &bounceLimit, SHADER_UNIFORM_INT);
+	SetShaderValue(frag, defocusDiskU_loc, &cam.defocusDiskU, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, defocusDiskV_loc, &cam.defocusDiskV, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, defocusAngle_loc, &cam.defocusAngle, SHADER_UNIFORM_FLOAT);
 
 	RenderTexture2D accum[2] = {
 		cam.LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
 		cam.LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
 	};
+
+	RenderTexture2D output = LoadRenderTexture(cam.imageWidth, cam.imageHeight);
 
 	int current = 0;
 
@@ -139,6 +147,69 @@ int main(void) {
 			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
 			frameIndex = 0;
 		}
+		if (IsKeyPressed(KEY_LEFT)) {
+			cam.focusDist -= 1;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskU_loc, &cam.defocusDiskU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskV_loc, &cam.defocusDiskV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusAngle_loc, &cam.defocusAngle, SHADER_UNIFORM_FLOAT);
+			frameIndex = 0;
+		}
+		if (IsKeyPressed(KEY_RIGHT)) {
+			cam.focusDist += 1;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskU_loc, &cam.defocusDiskU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskV_loc, &cam.defocusDiskV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusAngle_loc, &cam.defocusAngle, SHADER_UNIFORM_FLOAT);
+			frameIndex = 0;
+		}
+		if (IsKeyPressed(KEY_UP)) {
+			cam.defocusAngle += 1;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskU_loc, &cam.defocusDiskU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskV_loc, &cam.defocusDiskV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusAngle_loc, &cam.defocusAngle, SHADER_UNIFORM_FLOAT);
+			frameIndex = 0;
+		}
+		if (IsKeyPressed(KEY_DOWN)) {
+			cam.defocusAngle -= 1;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskU_loc, &cam.defocusDiskU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusDiskV_loc, &cam.defocusDiskV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, defocusAngle_loc, &cam.defocusAngle, SHADER_UNIFORM_FLOAT);
+			frameIndex = 0;
+		}
+		if (IsKeyPressed(KEY_P)) {
+			BeginTextureMode(output);
+			ClearBackground(BLACK);
+
+			BeginShaderMode(display);
+			DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(cam.imageWidth), -float(cam.imageHeight)}, Vector2{0, 0}, WHITE);
+			EndShaderMode();
+			EndTextureMode();
+
+			Image image = LoadImageFromTexture(output.texture);
+			ImageFlipVertical(&image);
+
+			ExportImage(image, "render.png");
+			UnloadImage(image);
+		}
 
 		BeginDrawing();
 			ClearBackground(BLACK);
@@ -160,7 +231,10 @@ int main(void) {
 			DrawFPS(10, 10);
 			DrawText(std::to_string((int)cam.vFov).c_str(), 80, 40, 30, DARKGREEN);
 			DrawText("Fov:", 10, 40, 30, DARKGREEN);
-			DrawText(std::to_string((int)cam.position.z).c_str(), 80, 80, 30, DARKGREEN);
+			DrawText("Blur Int.:", 10, 70, 30, DARKGREEN);
+			DrawText(std::to_string((int)cam.defocusAngle).c_str(), 155, 70, 30, DARKGREEN);
+			DrawText("Focus Dst.:", 10, 100, 30, DARKGREEN);
+			DrawText(std::to_string((int)cam.focusDist).c_str(), 188, 100, 30, DARKGREEN);
 
 
 		EndDrawing();

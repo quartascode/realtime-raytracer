@@ -11,6 +11,9 @@ uniform sampler2D previousFrame;
 uniform int samplesPerPixel;
 uniform float pixelSampleScale;
 uniform int bounceLimit;
+uniform vec3 defocusDiskU;
+uniform vec3 defocusDiskV;
+uniform float defocusAngle;
 
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;
@@ -89,6 +92,16 @@ vec3 RandUnitVec() {
 	return normalize(vec3(x, y, z));
 }
 
+vec3 RandInUnitDisk() {
+	vec2 dir;
+	dir.x = RandNormalDist();
+	dir.y = RandNormalDist();
+
+	float radius = sqrt(Rand());
+
+	return vec3(dir * radius, 0);
+}
+
 vec3 RandOnHemisphere(vec3 normal) {
 	vec3 onUnitSphere = RandUnitVec();
 	if (dot(onUnitSphere, normal) < 0) {
@@ -127,11 +140,16 @@ vec3 SampleSquare() {
 	return vec3(Rand() - 0.5, Rand() - 0.5, 0);
 }
 
+vec3 DefocusDiskSample() {
+	vec3 p = RandInUnitDisk();
+	return cameraPosition + (p.x * defocusDiskU) + (p.y * defocusDiskV);
+}
+
 ray GetRay(int x, int y) {
 	vec3 offset = SampleSquare();
 	vec3 pixelSample = firstPixelPos + ((x + offset.x) * pixelDeltaU) + ((y + offset.y) * pixelDeltaV);
 
-	vec3 rayOrigin = cameraPosition;
+	vec3 rayOrigin = (defocusAngle <= 0) ? cameraPosition : DefocusDiskSample();
 	vec3 rayDirection = pixelSample - rayOrigin;
 
 	return ray(rayOrigin, rayDirection);
@@ -288,7 +306,7 @@ void main() {
 	material light;
 	light.type = LIGHT_SOURCE;
 	light.emissionColor = vec3(1.0, 1.0, 1.0);
-	light.emissionStrength = 5.0;
+	light.emissionStrength = 1.0;
 
 	material mirror;
 	mirror.type = METAL;
