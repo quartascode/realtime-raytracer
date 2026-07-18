@@ -1,15 +1,35 @@
 #include "camera.hpp"
+#include <raylib.h>
 #include <rlgl.h>
 
 void SimCamera::Initialize() {
+	imageHeight = int(imageWidth / aspectRatio);
+	imageHeight = imageHeight < 1 ? 1 : imageHeight;
 
-	aspectRatio = 16.0f / 9.0f;
-	imageWidth = 1920;
+	float theta = vFov * PI / 180.0f;
+	float h = tan(theta / 2);
+	float focalLength = 1.0f;
+	float viewportHeight = 2.0 * h * focalLength;
+	float viewportWidth = viewportHeight * (float(imageWidth) / imageHeight);
+
+	Vector3 viewportU = {viewportWidth, 0, 0};
+	Vector3 viewportV = {0, viewportHeight, 0};
+
+	pixelDeltaU = viewportU / imageWidth;
+	pixelDeltaV = viewportV / imageHeight;
+
+	Vector3 viewportLowerLeft = position - Vector3{0, 0, focalLength} - viewportU/2 - viewportV/2;
+	firstPixelPos = viewportLowerLeft + (pixelDeltaU + pixelDeltaV) * 0.5f;
+}
+
+void SimCamera::Update() {
+	pixelDeltaU = Vector3{0, 0, 0};
+	pixelDeltaV = Vector3{0, 0, 0};
+	firstPixelPos = Vector3{0, 0, 0};
 
 	imageHeight = int(imageWidth / aspectRatio);
 	imageHeight = imageHeight < 1 ? 1 : imageHeight;
 
-	vFov = 60;
 	float theta = vFov * PI / 180.0f;
 	float h = tan(theta / 2);
 	float focalLength = 1.0f;

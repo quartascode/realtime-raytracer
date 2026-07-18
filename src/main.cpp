@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
+#include <string>
 #include "camera.hpp"
 
 
@@ -17,7 +18,7 @@ int main(void) {
 
 	// raylib
 	InitWindow(cam.imageWidth, cam.imageHeight, "raytracer");
-	SetTargetFPS(0);
+	SetTargetFPS(60);
 	ToggleFullscreen();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");
@@ -53,6 +54,17 @@ int main(void) {
 		int previous = current;
 		current = 1 - current;
 
+		float wheel = GetMouseWheelMove();
+		if (wheel != 0) {
+			cam.vFov += 1 * -wheel;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+
+
 		BeginDrawing();
 			ClearBackground(BLACK);
 			BeginTextureMode(accum[current]);
@@ -71,6 +83,9 @@ int main(void) {
 			EndShaderMode();
 
 			DrawFPS(10, 10);
+			DrawText(std::to_string((int)cam.vFov).c_str(), 80, 40, 30, DARKGREEN);
+			DrawText("Fov:", 10, 40, 30, DARKGREEN);
+
 
 		EndDrawing();
 

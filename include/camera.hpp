@@ -15,5 +15,7 @@ struct SimCamera {
 
 	void Initialize();
 
+	void Update();
+
 	RenderTexture2D LoadFloatRenderTexture(int width, int height);
 };
