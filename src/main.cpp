@@ -20,6 +20,7 @@ int main(void) {
 	InitWindow(cam.imageWidth, cam.imageHeight, "raytracer");
 	SetTargetFPS(60);
 	ToggleFullscreen();
+	HideCursor();
 
 	Shader frag = LoadShader(nullptr, "shader/shader.frag");
 	Shader display = LoadShader(nullptr, "shader/display.frag");
@@ -50,6 +51,8 @@ int main(void) {
 
 	int current = 0;
 
+	float speed = 1;
+
 	while (!WindowShouldClose()) {
 		int previous = current;
 		current = 1 - current;
@@ -64,6 +67,62 @@ int main(void) {
 			frameIndex = 0;
 		}
 
+		float dt = GetFrameTime();
+
+		if (IsKeyDown(KEY_W)) {
+			cam.position.z -= speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyDown(KEY_S)) {
+			cam.position.z += speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyDown(KEY_A)) {
+			cam.position.x -= speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyDown(KEY_D)) {
+			cam.position.x += speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyDown(KEY_SPACE)) {
+			cam.position.y += speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
+		if (IsKeyDown(KEY_LEFT_SHIFT)) {
+			cam.position.y -= speed * dt;
+			cam.Initialize();
+			SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
+			SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+			frameIndex = 0;
+		}
 
 		BeginDrawing();
 			ClearBackground(BLACK);
@@ -85,6 +144,7 @@ int main(void) {
 			DrawFPS(10, 10);
 			DrawText(std::to_string((int)cam.vFov).c_str(), 80, 40, 30, DARKGREEN);
 			DrawText("Fov:", 10, 40, 30, DARKGREEN);
+			DrawText(std::to_string((int)cam.position.z).c_str(), 80, 80, 30, DARKGREEN);
 
 
 		EndDrawing();
