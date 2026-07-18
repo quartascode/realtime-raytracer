@@ -1,7 +1,7 @@
-#include <cmath>
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
+#include "camera.hpp"
 
 RenderTexture2D LoadFloatRenderTexture(int width, int height) {
 	RenderTexture2D target = {};
@@ -36,32 +36,6 @@ float DegreeToRadians(float theta) {
 
 
 int main(void) {
-
-	float aspectRatio = 16.0f / 9.0f;
-	int imageWidth = 1920;
-
-	int imageHeight = int(imageWidth / aspectRatio);
-	imageHeight = imageHeight < 1 ? 1 : imageHeight;
-
-	float vFov = 60;
-	float theta = DegreeToRadians(vFov);
-	float h = tan(theta / 2);
-
-	float focalLength = 1.0f;
-	float viewportHeight = 2.0 * h * focalLength;
-	float viewportWidth = viewportHeight * (float(imageWidth) / imageHeight);
-
-	Vector3 cameraCenter = {0, 0, 0};
-
-	Vector3 viewportU = {viewportWidth, 0, 0};
-	Vector3 viewportV = {0, viewportHeight, 0};
-
-	Vector3 pixelDeltaU = viewportU / imageWidth;
-	Vector3 pixelDeltaV = viewportV / imageHeight;
-
-	Vector3 viewportLowerLeft = cameraCenter - Vector3{0, 0, focalLength} - viewportU/2 - viewportV/2;
-	Vector3 firstPixelPos = viewportLowerLeft + (pixelDeltaU + pixelDeltaV) * 0.5f;
-
 	int samplesPerPixel = 10;
 	float pixelSampleScale = 1.0 / samplesPerPixel;
 
@@ -69,8 +43,11 @@ int main(void) {
 
 	int frameIndex = 0;
 
+	SimCamera cam;
+	cam.Initialize();
+
 	// raylib
-	InitWindow(imageWidth, imageHeight, "raytracer");
+	InitWindow(cam.imageWidth, cam.imageHeight, "raytracer");
 	SetTargetFPS(0);
 	ToggleFullscreen();
 
@@ -88,17 +65,17 @@ int main(void) {
 	int pixelSampleScale_loc = GetShaderLocation(frag, "pixelSampleScale");
 	int bounceLimit_loc = GetShaderLocation(frag, "bounceLimit");
 
-	SetShaderValue(frag, firstPixel_loc, &firstPixelPos, SHADER_UNIFORM_VEC3);
-	SetShaderValue(frag, cameraPos_loc, &cameraCenter, SHADER_UNIFORM_VEC3);
-	SetShaderValue(frag, pixelDeltaU_loc, &pixelDeltaU, SHADER_UNIFORM_VEC3);
-	SetShaderValue(frag, pixelDeltaV_loc, &pixelDeltaV, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, firstPixel_loc, &cam.firstPixelPos, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, cameraPos_loc, &cam.position, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, pixelDeltaU_loc, &cam.pixelDeltaU, SHADER_UNIFORM_VEC3);
+	SetShaderValue(frag, pixelDeltaV_loc, &cam.pixelDeltaV, SHADER_UNIFORM_VEC3);
 	SetShaderValue(frag, samplesPerPixel_loc, &samplesPerPixel, SHADER_UNIFORM_INT);
 	SetShaderValue(frag, pixelSampleScale_loc, &pixelSampleScale, SHADER_UNIFORM_FLOAT);
 	SetShaderValue(frag, bounceLimit_loc, &bounceLimit, SHADER_UNIFORM_INT);
 
 	RenderTexture2D accum[2] = {
-		LoadFloatRenderTexture(imageWidth, imageHeight),
-		LoadFloatRenderTexture(imageWidth, imageHeight),
+		LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
+		LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
 	};
 
 	int current = 0;
@@ -121,7 +98,7 @@ int main(void) {
 			EndTextureMode();
 
 			BeginShaderMode(display);
-				DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(imageWidth), -float(imageHeight)}, Vector2{0, 0}, WHITE);
+				DrawTextureRec(accum[current].texture, Rectangle{0, 0, float(cam.imageWidth), -float(cam.imageHeight)}, Vector2{0, 0}, WHITE);
 			EndShaderMode();
 
 			DrawFPS(10, 10);
