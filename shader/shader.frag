@@ -15,10 +15,10 @@ uniform int bounceLimit;
 const float PI = 3.14159265358979323846;
 const float INFINITY = 1e30;
 
-const int LAMBERTIAN  = 0;
-const int METAL       = 1;
-const int DIELETRIC   = 2;
-const int LIGHT_SORCE = 3;
+const int LAMBERTIAN   = 0;
+const int METAL        = 1;
+const int DIELECTRIC   = 2;
+const int LIGHT_SOURCE = 3;
 
 struct material {
 	int type;
@@ -34,7 +34,7 @@ struct sphere {
     float radius;
 	material material;
 };
-const int SPHERE_COUNT = 2;
+const int SPHERE_COUNT = 4;
 sphere spheres[SPHERE_COUNT];
 
 struct ray {
@@ -99,6 +99,11 @@ vec3 RandOnHemisphere(vec3 normal) {
 		return -onUnitSphere;
 	}
 	return onUnitSphere;
+}
+
+bool Vec3NearZero(vec3 v) {
+	float s = 1e-6;
+	return (abs(v.x) < s) && (abs(v.y) < s) && (abs(v.z) < s);
 }
 
 vec3 RayAt(in ray r, float t) {
@@ -171,23 +176,47 @@ bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
 	return hitAnything;
 }
 
+void LambertianScatter(inout hitInfo info, inout vec3 attenuation, inout ray scattered) {
+	vec3 scatterDirection = info.normal + RandUnitVec();
+
+	if (Vec3NearZero(scatterDirection)) {
+		scatterDirection = info.normal;
+	}
+
+	scattered = ray(info.hitPoint, scatterDirection);
+	attenuation = info.material.albedo;
+}
+
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
 
 	for (int i = 0; i <= bounceLimit; i++) {
 		hitInfo info;
 		if (Hit(r, 0.001, INFINITY, info)) {
-			vec3 direction = info.normal + RandUnitVec();
+			vec3 attenuation;
+			vec3 incomingLight = vec3(0);
 
-			color *= 0.5;
-
-			r.origin = info.hitPoint;
-			r.direction = direction;
+			switch (info.material.type) {
+				case LAMBERTIAN:
+					LambertianScatter(info, attenuation, r);
+					color *= attenuation;
+					break;
+				case METAL:
+					break;
+				case DIELECTRIC:
+					break;
+				case LIGHT_SOURCE:
+					vec3 emmitedLight = info.material.emissionColor * info.material.emissionStrength;
+					incomingLight += emmitedLight;
+					return incomingLight * color;
+					break;
+			}
 		} else {
 			vec3 unitDir = normalize(r.direction);
 			float a = 0.5 * (unitDir.y + 1.0);
 
-			vec3 background = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+			vec3 background = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.3, 0.5, 1.0);
+			//vec3 background = vec3(0.0);
 
 			return color * background;
 		}
@@ -204,10 +233,17 @@ void main() {
 
 	material greyLamb;
 	greyLamb.type = LAMBERTIAN;
-	greyLamb.albedo = vec3(0.4, 0.4, 0.4);
+	greyLamb.albedo = vec3(0.651, 0.651, 0.651);
+
+	material light;
+	light.type = LIGHT_SOURCE;
+	light.emissionColor = vec3(1.0, 1.0, 1.0);
+	light.emissionStrength = 5.0;
 
 	spheres[0] = sphere(vec3(0, 0, -1), 0.5, blueLamb);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
+	spheres[2] = sphere(vec3(1, 0, -1), 0.5, blueLamb);
+	spheres[3] = sphere(vec3(-1, 0, -1), 0.5, blueLamb);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
