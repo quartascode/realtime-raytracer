@@ -110,6 +110,13 @@ vec3 Reflect(vec3 v, vec3 n) {
 	return v - 2 * dot(v, n) * n;
 }
 
+vec3 Refract(vec3 v, vec3 n, float nRatio) {
+	float cosTheta = min(dot(-v, n), 1.0);
+	vec3 perpendicular = nRatio * (v + cosTheta * n);
+	vec3 parallel = -sqrt(abs(1.0 - dot(perpendicular, perpendicular))) * n;
+	return perpendicular + parallel;
+}
+
 vec3 RayAt(in ray r, float t) {
 	return r.origin + t * r.direction;
 }
@@ -198,6 +205,27 @@ void MetalScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout ray s
 	attenuation = info.material.albedo;
 }
 
+void DielectricScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout ray scattered) {
+	float ri = info.frontFace ? (1.0 / info.material.refractionIndex) : info.material.refractionIndex;
+
+	vec3 unitDir = normalize(r.direction);
+	float cosTheta = min(dot(-unitDir, info.normal), 1.0);
+	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+	bool canRefract = !(ri * sinTheta > 1.0);
+	vec3 dir;
+
+	if (canRefract) {
+		dir = Refract(unitDir, info.normal, ri);
+	} else {
+		dir = Reflect(unitDir, info.normal);
+	}
+
+	scattered = ray(info.hitPoint, dir);
+
+	attenuation = info.material.albedo;
+}
+
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
 
@@ -217,6 +245,8 @@ vec3 RayColor(in ray r) {
 					color *= attenuation;
 					break;
 				case DIELECTRIC:
+					DielectricScatter(r, info, attenuation, r);
+					color *= attenuation;
 					break;
 				case LIGHT_SOURCE:
 					vec3 emmitedLight = info.material.emissionColor * info.material.emissionStrength;
@@ -267,7 +297,12 @@ void main() {
 	gold.albedo = vec3(0.827, 0.686, 0.245);
 	gold.fuzz = 0.4;
 
-	spheres[0] = sphere(vec3(0, 0, -1.75), 0.5, gold);
+	material glass;
+	glass.type = DIELECTRIC;
+	glass.refractionIndex = 1.5;
+	glass.albedo = vec3(1, 1, 1);
+
+	spheres[0] = sphere(vec3(0, 0, -1.75), 0.5, glass);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
 	spheres[2] = sphere(vec3(1, 0, -1.5), 0.5, blueLamb);
 	spheres[3] = sphere(vec3(-1, 0, -1.5), 0.5, redLamb);
