@@ -1,3 +1,4 @@
+#include <cmath>
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -28,6 +29,12 @@ RenderTexture2D LoadFloatRenderTexture(int width, int height) {
 	return target;
 }
 
+float DegreeToRadians(float theta) {
+	return theta * PI / 180.0;
+}
+
+
+
 int main(void) {
 
 	float aspectRatio = 16.0f / 9.0f;
@@ -36,8 +43,12 @@ int main(void) {
 	int imageHeight = int(imageWidth / aspectRatio);
 	imageHeight = imageHeight < 1 ? 1 : imageHeight;
 
+	float vFov = 60;
+	float theta = DegreeToRadians(vFov);
+	float h = tan(theta / 2);
+
 	float focalLength = 1.0f;
-	float viewportHeight = 2.0;
+	float viewportHeight = 2.0 * h * focalLength;
 	float viewportWidth = viewportHeight * (float(imageWidth) / imageHeight);
 
 	Vector3 cameraCenter = {0, 0, 0};

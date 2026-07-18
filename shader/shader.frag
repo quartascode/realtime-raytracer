@@ -34,7 +34,7 @@ struct sphere {
     float radius;
 	material material;
 };
-const int SPHERE_COUNT = 4;
+const int SPHERE_COUNT = 5;
 sphere spheres[SPHERE_COUNT];
 
 struct ray {
@@ -49,10 +49,6 @@ struct hitInfo {
 	bool frontFace;
 	material material;
 };
-
-float DegreeToRadians(float theta) {
-	return theta * PI / 180.0;
-}
 
 uint rngState;
 uint Hash(uint x) {
@@ -308,10 +304,14 @@ void main() {
 	glass.refractionIndex = 1.5;
 	glass.albedo = vec3(1, 1, 1);
 
+	material inGlass = glass;
+	inGlass.refractionIndex = 1/1.5;
+
 	spheres[0] = sphere(vec3(0, 0, -1.75), 0.5, glass);
 	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
 	spheres[2] = sphere(vec3(1, 0, -1.5), 0.5, blueLamb);
 	spheres[3] = sphere(vec3(-1, 0, -1.5), 0.5, redLamb);
+	spheres[4] = sphere(vec3(0, 0, -1.75), 0.45, inGlass);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
