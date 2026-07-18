@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <raylib.h>
 #include <raymath.h>
 
 struct SimCamera {
@@ -15,4 +15,5 @@ struct SimCamera {
 
 	void Initialize();
 
+	RenderTexture2D LoadFloatRenderTexture(int width, int height);
 };

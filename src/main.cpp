@@ -3,37 +3,6 @@
 #include <rlgl.h>
 #include "camera.hpp"
 
-RenderTexture2D LoadFloatRenderTexture(int width, int height) {
-	RenderTexture2D target = {};
-
-	target.id = rlLoadFramebuffer();
-
-	if (target.id > 0) {
-		rlEnableFramebuffer(target.id);
-		target.texture.id = rlLoadTexture(nullptr, width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32, 1);
-
-		target.texture.width = width;
-		target.texture.height = height;
-		target.texture.mipmaps = 1;
-		target.texture.format = PIXELFORMAT_UNCOMPRESSED_R32G32B32A32;
-
-		rlFramebufferAttach(target.id, target.texture.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
-
-		if (!rlFramebufferComplete(target.id)) {
-			TraceLog(LOG_ERROR, "Framebuffer float incomplete");
-		}
-
-		rlDisableFramebuffer();
-	}
-
-	return target;
-}
-
-float DegreeToRadians(float theta) {
-	return theta * PI / 180.0;
-}
-
-
 
 int main(void) {
 	int samplesPerPixel = 10;
@@ -74,8 +43,8 @@ int main(void) {
 	SetShaderValue(frag, bounceLimit_loc, &bounceLimit, SHADER_UNIFORM_INT);
 
 	RenderTexture2D accum[2] = {
-		LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
-		LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
+		cam.LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
+		cam.LoadFloatRenderTexture(cam.imageWidth, cam.imageHeight),
 	};
 
 	int current = 0;
