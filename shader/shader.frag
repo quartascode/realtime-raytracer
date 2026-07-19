@@ -48,6 +48,7 @@ struct ray {
 };
 
 struct hitInfo {
+	bool didHit;
 	vec3 hitPoint;
 	vec3 normal;
 	float t;
@@ -164,7 +165,9 @@ void SetFaceNormal (ray r, vec3 outwardNormal, inout hitInfo inf) {
 	inf.normal = inf.frontFace ? outwardNormal : -outwardNormal;
 }
 
-bool HitSphere(sphere s, ray r, float tMin, float tMax, inout hitInfo info) {
+hitInfo HitSphere(sphere s, ray r, float tMin, float tMax) {
+	hitInfo info;
+
 	vec3 oc = s.center - r.origin;
 
 	float a = dot(r.direction, r.direction);
@@ -174,39 +177,43 @@ bool HitSphere(sphere s, ray r, float tMin, float tMax, inout hitInfo info) {
 	float discriminant = h*h - a*c;
 
 	if (discriminant < 0) {
-		return false;
+		info.didHit = false;
+		return info;
 	}
 
 	float root = (h - sqrt(discriminant)) / a;
 	if (root <= tMin || root >= tMax) {
 		root = (h + sqrt(discriminant)) / a;
 		if (root <= tMin || root >= tMax) {
-			return false;
+			info.didHit = false;
+			return info;
 		}
 	}
 
+	info.didHit = true;
 	info.t = root;
 	info.hitPoint = RayAt(r, info.t);
 	vec3 outwardNormal = (info.hitPoint - s.center) / s.radius;
 	SetFaceNormal(r, outwardNormal, info);
 	info.material = s.material;
 
-	return true;
+	return info;
 }
 
-bool Hit(ray r, float tMin, float tMax, inout hitInfo info) {
-	hitInfo tempInfo;
-	bool hitAnything = false;
-	float closestSoFar = tMax;
+hitInfo Hit(ray r, float tMin, float tMax) {
+	hitInfo info;
+	hitInfo temp;
+	info.didHit = false;
+	info.t = tMax;
 
 	for (int i = 0; i < SPHERE_COUNT; i++) {
-		if (HitSphere(spheres[i], r, tMin, closestSoFar, tempInfo)) {
-			hitAnything = true;
-			closestSoFar = tempInfo.t;
-			info = tempInfo;
+		temp = HitSphere(spheres[i], r, tMin, info.t);
+		if (temp.didHit) {
+			info = temp;
 		}
 	}
-	return hitAnything;
+
+	return info;
 }
 
 void LambertianScatter(inout hitInfo info, inout vec3 attenuation, inout ray scattered) {
@@ -251,8 +258,8 @@ void DielectricScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout 
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
 	for (int i = 0; i <= bounceLimit; i++) {
-		hitInfo info;
-		if (Hit(r, 0.001, INFINITY, info)) {
+		hitInfo info = Hit(r, 0.001, INFINITY);
+		if (info.didHit) {
 			vec3 attenuation;
 			vec3 incomingLight = vec3(0);
 
