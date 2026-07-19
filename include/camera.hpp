@@ -7,8 +7,8 @@ struct SimCamera {
 	float aspectRatio = 16.0f / 9.0f;
 	int imageWidth = 1920;
 	int imageHeight;
-	Vector3 position = {0, 0, 0};
-	Vector3 lookAt = {0, 0, -1};
+	Vector3 position = {0, 6, 5};
+	Vector3 lookAt = {0, 0, -3};
 	Vector3 vup = {0, 1, 0};
 	Vector3 u, v, w;
 	Vector3 firstPixelPos;

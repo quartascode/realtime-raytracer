@@ -23,6 +23,8 @@ const int METAL        = 1;
 const int DIELECTRIC   = 2;
 const int LIGHT_SOURCE = 3;
 
+const bool night = !true;
+
 struct material {
 	int type;
 	vec3 albedo;
@@ -37,7 +39,7 @@ struct sphere {
     float radius;
 	material material;
 };
-const int SPHERE_COUNT = 5;
+const int SPHERE_COUNT = 11;
 sphere spheres[SPHERE_COUNT];
 
 struct ray {
@@ -248,7 +250,6 @@ void DielectricScatter(ray r, inout hitInfo info, inout vec3 attenuation, inout 
 
 vec3 RayColor(in ray r) {
 	vec3 color = vec3(1.0);
-
 	for (int i = 0; i <= bounceLimit; i++) {
 		hitInfo info;
 		if (Hit(r, 0.001, INFINITY, info)) {
@@ -277,9 +278,14 @@ vec3 RayColor(in ray r) {
 		} else {
 			vec3 unitDir = normalize(r.direction);
 			float a = 0.5 * (unitDir.y + 1.0);
+			
+			vec3 background;
 
-			vec3 background = (1.0 - a) * vec3(0.7, 0.7, 0.7) + a * vec3(0.3, 0.5, 0.9);
-			//vec3 background = vec3(0.0);
+			if (night) {
+				background = vec3(0.0);
+			} else {
+				background = (1.0 - a) * vec3(0.7, 0.7, 0.7) + a * vec3(0.3, 0.5, 0.9);
+			}
 
 			return color * background;
 		}
@@ -290,23 +296,44 @@ vec3 RayColor(in ray r) {
 void main() {
 	ivec2 pixel = ivec2(gl_FragCoord.xy);
 
-	material blueLamb;
-	blueLamb.type = LAMBERTIAN;
-	blueLamb.albedo = vec3(0.1, 0.1, 1);
+	material blue;
+	blue.type = LAMBERTIAN;
+	blue.albedo = vec3(0.3, 0.2, 0.8);
 
-	material redLamb = blueLamb;
-	redLamb.albedo = vec3(1, 0.1, 0.1);
+	material red = blue;
+	red.albedo = vec3(0.9, 0.2, 0.1);
 
-	material greyLamb = blueLamb;
-	greyLamb.albedo = vec3(0.651, 0.651, 0.651);
+	material green = blue;
+	green.albedo = vec3(0.1, 1, 0.1);
 
-	material whiteLamb = blueLamb;
-	whiteLamb.albedo = vec3(1);
+	material grey = blue;
+	grey.albedo = vec3(0.651, 0.651, 0.651);
+
+	material white = blue;
+	white.albedo = vec3(1);
+
+	material purple = blue;
+	purple.albedo = vec3(0.8, 0.2, 0.8);
+
+	material yellow = blue;
+	yellow.albedo = vec3(0.8, 0.8, 0.1);
 
 	material light;
 	light.type = LIGHT_SOURCE;
-	light.emissionColor = vec3(1.0, 1.0, 1.0);
-	light.emissionStrength = 1.0;
+	light.emissionColor = vec3(1.0, 0.8, 0.4);
+	light.emissionStrength = 100.0;
+
+	material gl = light;
+	gl.emissionColor = green.albedo;
+
+	material bl = light;
+	bl.emissionColor = blue.albedo;
+
+	material pl = light;
+	pl.emissionColor = purple.albedo;
+
+	material rl = light;
+	rl.emissionColor = red.albedo;
 
 	material mirror;
 	mirror.type = METAL;
@@ -315,7 +342,10 @@ void main() {
 
 	material gold = mirror;
 	gold.albedo = vec3(0.827, 0.686, 0.245);
-	gold.fuzz = 0.4;
+	gold.fuzz = 0.1;
+
+	material otherMirror = mirror;
+	otherMirror.albedo = vec3(0.3, 0.3, 0.3);
 
 	material glass;
 	glass.type = DIELECTRIC;
@@ -325,11 +355,12 @@ void main() {
 	material inGlass = glass;
 	inGlass.refractionIndex = 1/1.5;
 
-	spheres[0] = sphere(vec3(0, 0, -1.75), 0.5, glass);
-	spheres[1] = sphere(vec3(0, -100.5, -1), 100, greyLamb);
-	spheres[2] = sphere(vec3(1, 0, -1.5), 0.5, blueLamb);
-	spheres[3] = sphere(vec3(-1, 0, -1.5), 0.5, redLamb);
-	spheres[4] = sphere(vec3(0, 0, -1.75), 0.45, inGlass);
+	spheres[0] = sphere(vec3(0.0, -100.5, -3.0), 100.0, green);
+	spheres[1] = sphere(vec3(0, 1, 2), 0.5, glass);
+	spheres[5] = sphere(vec3(0, 1, 2.6), 0.1, bl);
+	spheres[2] = sphere(vec3(0.5, 0, -1.5), 0.5, blue);
+	spheres[3] = sphere(vec3(-0.5, 0, -1.5), 0.5, red);
+	spheres[4] = sphere(vec3(0, 1.366025404 - 0.5 + 0.01, -1.5), 0.5, white);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
