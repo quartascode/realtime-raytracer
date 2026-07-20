@@ -261,27 +261,22 @@ vec3 RayColor(in ray r) {
 		hitInfo info = Hit(r, 0.001, INFINITY);
 		if (info.didHit) {
 			vec3 attenuation;
-			vec3 incomingLight = vec3(0);
 
 			switch (info.material.type) {
 				case LAMBERTIAN:
 					LambertianScatter(info, attenuation, r);
-					color *= attenuation;
 					break;
 				case METAL:
 					MetalScatter(r, info, attenuation, r);
-					color *= attenuation;
 					break;
 				case DIELECTRIC:
 					DielectricScatter(r, info, attenuation, r);
-					color *= attenuation;
 					break;
 				case LIGHT_SOURCE:
 					vec3 emmitedLight = info.material.emissionColor * info.material.emissionStrength;
-					incomingLight += emmitedLight;
-					return incomingLight * color;
-					break;
+					return emmitedLight * color;
 			}
+			color *= attenuation;
 		} else {
 			vec3 unitDir = normalize(r.direction);
 			float a = 0.5 * (unitDir.y + 1.0);
