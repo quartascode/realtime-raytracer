@@ -24,14 +24,15 @@ const int DIELECTRIC   = 2;
 const int LIGHT_SOURCE = 3;
 
 const bool night = !true;
+const bool BACK_FACE_CULL = false;
 
 struct material {
 	int type;
 	vec3 albedo;
-    float fuzz;
-    float refractionIndex;
-    vec3 emissionColor;
-    float emissionStrength;
+	float fuzz;
+	float refractionIndex;
+	vec3 emissionColor;
+	float emissionStrength;
 };
 
 struct triangle {
@@ -41,11 +42,11 @@ struct triangle {
 	material material;
 };
 const int TRIANGLE_COUNT = 1;
-triangle triangles[TRIANGLE_COUNT];
+triangle triangs[TRIANGLE_COUNT];
 
 struct sphere {
-    vec3 center;
-    float radius;
+	vec3 center;
+	float radius;
 	material material;
 };
 const int SPHERE_COUNT = 11;
@@ -67,10 +68,10 @@ struct hitInfo {
 
 uint rngState;
 uint Hash(uint x) {
-    x = ((x >> 16) ^ x) * 0x45d9f3bU;
-    x = ((x >> 16) ^ x) * 0x45d9f3bU;
-    x = (x >> 16) ^ x;
-    return x;
+	x = ((x >> 16) ^ x) * 0x45d9f3bU;
+	x = ((x >> 16) ^ x) * 0x45d9f3bU;
+	x = (x >> 16) ^ x;
+	return x;
 }
 
 float Rand() {
@@ -209,8 +210,78 @@ hitInfo HitSphere(sphere s, ray r, float tMin, float tMax) {
 	return info;
 }
 
-hitInfo HitTriangle(triangle t, ray r, float tMin, float tMax) {
+hitInfo HitTriangle(triangle tr, ray r, float tMin, float tMax) {
+	float EPSILON = 1e-6;
+	float t;
 
+	hitInfo info;
+	info.didHit = false;
+
+	vec3 edgeAB = tr.b - tr.a;
+	vec3 edgeAC = tr.c - tr.a;
+
+	vec3 pVec = cross(r.direction, edgeAC);
+
+	float det = dot(edgeAB, pVec);
+
+	if (BACK_FACE_CULL) {
+		if (det < EPSILON) {
+			return info;
+		}
+
+		vec3 tVec = r.origin - tr.a;
+
+		float u = dot(tVec, pVec);
+		if (u < 0.0 || u > det) {
+			return info;
+		}
+
+		vec3 qVec = cross(tVec, edgeAB);
+
+		float v = dot(r.direction, qVec);
+		if (v < 0.0 || u + v > det) {
+			return info;
+		}
+
+		t = dot(edgeAC, qVec);
+		float invDet = 1.0 / det;
+		t *= invDet;
+	} else {
+		if (det > -EPSILON && det < EPSILON) {
+			return info;
+		}
+		float invDet = 1.0 / det;
+
+		vec3 tVec = r.origin - tr.a;
+
+		float u = dot(tVec, pVec) * invDet;
+		if (u < 0.0 || u > 1.0) {
+			return info;
+		}
+
+		vec3 qVec = cross(tVec, edgeAB);
+
+		float v = dot(r.direction, qVec) * invDet;
+		if (v < 0.0 || u + v > 1.0) {
+			return info;
+		}
+
+		t = dot(edgeAC, qVec) * invDet;
+	}
+
+	if (t < tMin || t > tMax) {
+		return info;
+	}
+
+	vec3 outwardNormal = normalize(cross(edgeAB, edgeAC));
+
+	info.didHit = true;
+	info.hitPoint = RayAt(r, t);
+	info.t = t;
+	SetFaceNormal(r, outwardNormal, info);
+	info.material = tr.material;
+
+	return info;
 }
 
 hitInfo Hit(ray r, float tMin, float tMax) {
@@ -221,6 +292,13 @@ hitInfo Hit(ray r, float tMin, float tMax) {
 
 	for (int i = 0; i < SPHERE_COUNT; i++) {
 		temp = HitSphere(spheres[i], r, tMin, info.t);
+		if (temp.didHit) {
+			info = temp;
+		}
+	}
+
+	for (int i = 0; i < TRIANGLE_COUNT; i++) {
+		temp = HitTriangle(triangs[i], r, tMin, info.t);
 		if (temp.didHit) {
 			info = temp;
 		}
@@ -313,13 +391,13 @@ void main() {
 
 	material blue;
 	blue.type = LAMBERTIAN;
-	blue.albedo = vec3(0.3, 0.2, 0.8);
+	blue.albedo = vec3(0.0, 0.0, 1.0);
 
 	material red = blue;
-	red.albedo = vec3(0.9, 0.2, 0.1);
+	red.albedo = vec3(1.0, 0.0, 0.0);
 
 	material green = blue;
-	green.albedo = vec3(0.1, 1, 0.1);
+	green.albedo = vec3(0.0, 1, 0.0);
 
 	material grey = blue;
 	grey.albedo = vec3(0.651, 0.651, 0.651);
@@ -376,6 +454,8 @@ void main() {
 	spheres[2] = sphere(vec3(0.5, 0, -1.5), 0.5, blue);
 	spheres[3] = sphere(vec3(-0.5, 0, -1.5), 0.5, red);
 	spheres[4] = sphere(vec3(0, 1.366025404 - 0.5 + 0.01, -1.5), 0.5, white);
+
+	triangs[0] = triangle(vec3(0.5, 0, 0), vec3(-0.5, 0, 0), vec3(0, 1.366025404 - 0.5, 0), red);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
