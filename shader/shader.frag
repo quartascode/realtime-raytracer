@@ -34,6 +34,15 @@ struct material {
     float emissionStrength;
 };
 
+struct triangle {
+	vec3 a;
+	vec3 b;
+	vec3 c;
+	material material;
+};
+const int TRIANGLE_COUNT = 1;
+triangle triangles[TRIANGLE_COUNT];
+
 struct sphere {
     vec3 center;
     float radius;
@@ -198,6 +207,10 @@ hitInfo HitSphere(sphere s, ray r, float tMin, float tMax) {
 	info.material = s.material;
 
 	return info;
+}
+
+hitInfo HitTriangle(triangle t, ray r, float tMin, float tMax) {
+
 }
 
 hitInfo Hit(ray r, float tMin, float tMax) {
