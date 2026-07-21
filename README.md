@@ -6,6 +6,8 @@ This raytracers uses a shader to run on the gpu instead of the cpu
 - Dielectric materials
 - Mirrors
 - Light source
+- Sphere intersection
+- Triangle intersection (no mesh/model support yet, and also no BVH)
 
 ## Renders
 ![Image #1](renders/diagonal-night.png)
