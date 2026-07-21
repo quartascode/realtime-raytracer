@@ -23,8 +23,7 @@ const int METAL        = 1;
 const int DIELECTRIC   = 2;
 const int LIGHT_SOURCE = 3;
 
-const bool night = !true;
-const bool BACK_FACE_CULL = false;
+const bool night = true;
 
 struct material {
 	int type;
@@ -40,8 +39,9 @@ struct triangle {
 	vec3 b;
 	vec3 c;
 	material material;
+	bool backFaceCull;
 };
-const int TRIANGLE_COUNT = 1;
+const int TRIANGLE_COUNT = 30;
 triangle triangs[TRIANGLE_COUNT];
 
 struct sphere {
@@ -224,7 +224,7 @@ hitInfo HitTriangle(triangle tr, ray r, float tMin, float tMax) {
 
 	float det = dot(edgeAB, pVec);
 
-	if (BACK_FACE_CULL) {
+	if (tr.backFaceCull) {
 		if (det < EPSILON) {
 			return info;
 		}
@@ -400,7 +400,7 @@ void main() {
 	green.albedo = vec3(0.0, 1, 0.0);
 
 	material grey = blue;
-	grey.albedo = vec3(0.651, 0.651, 0.651);
+	grey.albedo = vec3(0.151, 0.151, 0.151);
 
 	material white = blue;
 	white.albedo = vec3(1);
@@ -413,8 +413,8 @@ void main() {
 
 	material light;
 	light.type = LIGHT_SOURCE;
-	light.emissionColor = vec3(1.0, 0.8, 0.4);
-	light.emissionStrength = 100.0;
+	light.emissionColor = vec3(1.0, 1.0, 1.0);
+	light.emissionStrength = 32.0;
 
 	material gl = light;
 	gl.emissionColor = green.albedo;
@@ -448,14 +448,69 @@ void main() {
 	material inGlass = glass;
 	inGlass.refractionIndex = 1/1.5;
 
-	spheres[0] = sphere(vec3(0.0, -100.5, -3.0), 100.0, green);
-	spheres[1] = sphere(vec3(0, 1, 2), 0.5, glass);
-	spheres[5] = sphere(vec3(0, 1, 2.6), 0.1, bl);
-	spheres[2] = sphere(vec3(0.5, 0, -1.5), 0.5, blue);
-	spheres[3] = sphere(vec3(-0.5, 0, -1.5), 0.5, red);
-	spheres[4] = sphere(vec3(0, 1.366025404 - 0.5 + 0.01, -1.5), 0.5, white);
+	// parede vermelha
+	triangs[0] = triangle(vec3(1.2, 0, -3), vec3(-1.2, 0, -3), vec3(1.2, 4, -3), red, false);
+	triangs[1] = triangle(vec3(1.2, 4, -3), vec3(-1.2, 0, -3), vec3(-1.2, 4, -3), red, false);
 
-	triangs[0] = triangle(vec3(0.5, 0, 0), vec3(-0.5, 0, 0), vec3(0, 1.366025404 - 0.5, 0), red);
+	// parede cinza de tras
+	triangs[2] = triangle(vec3(-1.2, 4, -3), vec3(-1.2, 0, -3), vec3(-1.2, 4, -5.4), grey, false);
+	triangs[3] = triangle(vec3(-1.2, 4, -5.4), vec3(-1.2, 0, -3), vec3(-1.2, 0, -5.4), grey, false);
+
+	// parede azul
+	triangs[4] = triangle(vec3(1.2, 0, -5.4), vec3(1.2, 4, -5.4), vec3(-1.2, 4, -5.4), blue, false);
+	triangs[5] = triangle(vec3(-1.2, 0, -5.4), vec3(1.2, 0, -5.4), vec3(-1.2, 4, -5.4), blue, false);
+
+	// teto branco
+	triangs[6] = triangle(vec3(-1.2, 4, -3.0), vec3(-1.2, 4, -5.4), vec3(1.2, 4, -3), white, false);
+	triangs[7] = triangle(vec3(1.2, 4, -5.4), vec3(1.2, 4, -3), vec3(-1.2, 4, -5.4), white, false);
+
+	// chao verde
+	triangs[8] = triangle(vec3(-1.2, 0, -3.0), vec3(1.2, 0, -3), vec3(-1.2, 0, -5.4), green, false);
+	triangs[9] = triangle(vec3(1.2, 0, -5.4), vec3(-1.2, 0, -5.4), vec3(1.2, 0, -3), green, false);
+
+	// luz
+	triangs[10] = triangle(vec3(0.3, 3.995, -3 - 0.9), vec3(-0.3, 3.995, -3.0 - 0.9), vec3(-0.3, 3.995, -5.4 + 0.9), light, false);
+	triangs[11] = triangle(vec3(0.3, 3.995, -3 - 0.9), vec3(0.3, 3.995, -5.4 + 0.9), vec3(-0.3, 3.995, -5.4 + 0.9), light, false);
+
+	// parede branca invisivel pra camera
+	triangs[12] = triangle(vec3(1.2, 0, -3), vec3(1.2, 4, -3), vec3(1.2, 4, -5.4), grey, true);
+	triangs[13] = triangle(vec3(1.2, 0, -3), vec3(1.2, 4, -5.4), vec3(1.2, 0, -5.4), grey, true);
+
+	// ----------- //
+
+//	spheres[0] = sphere(vec3(-0.65, 0.8, -3.95), 0.5, glass);
+//	spheres[1] = sphere(vec3(-0.1, 3.43, -4.61), 0.5, glass);
+//	spheres[2] = sphere(vec3(0.63, 2.43, -3.6), 0.5, glass);
+//	spheres[3] = sphere(vec3(0, 1.73, -4.8), 0.5, glass);
+//
+//	spheres[4] = sphere(vec3(-0.75, 3.5, -3.5), 0.2, glass);
+//	spheres[5] = sphere(vec3(-0.1, 2.63, -4.61), 0.2, glass);
+//	spheres[6] = sphere(vec3(1.13, 1.63, -3.3), 0.2, glass);
+//	spheres[7] = sphere(vec3(0.3, 0.83, -5.0), 0.2, glass);
+
+	// +X
+	triangs[14] = triangle(vec3(0.4, 0.0, -3.9), vec3(0.4, 0.0, -4.8), vec3(0.4, 0.9, -4.8), white, false);
+	triangs[15] = triangle(vec3(0.4, 0.0, -3.9), vec3(0.4, 0.9, -4.8), vec3(0.4, 0.9, -3.9), white, false);
+
+	// -X
+	triangs[16] = triangle(vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.0, -3.9), vec3(-0.5, 0.9, -3.9), white, false);
+	triangs[17] = triangle(vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.9, -3.9), vec3(-0.5, 0.9, -4.8), white, false);
+
+	// +Y
+	triangs[18] = triangle(vec3(-0.5, 0.9, -3.9), vec3(0.4, 0.9, -3.9), vec3(0.4, 0.9, -4.8), white, false);
+	triangs[19] = triangle(vec3(-0.5, 0.9, -3.9), vec3(0.4, 0.9, -4.8), vec3(-0.5, 0.9, -4.8), white, false);
+
+	// -Y
+	triangs[20] = triangle(vec3(-0.5, 0.0, -4.8), vec3(0.4, 0.0, -4.8), vec3(0.4, 0.0, -3.9), white, false);
+	triangs[21] = triangle(vec3(-0.5, 0.0, -4.8), vec3(0.4, 0.0, -3.9), vec3(-0.5, 0.0, -3.9), white, false);
+
+	// -Z
+	triangs[22] = triangle(vec3(0.4, 0.0, -4.8), vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.9, -4.8), white, false);
+	triangs[23] = triangle(vec3(0.4, 0.0, -4.8), vec3(-0.5, 0.9, -4.8), vec3(0.4, 0.9, -4.8), white, false);
+
+	// +Z
+	triangs[24] = triangle(vec3(-0.5, 0.0, -3.9), vec3(0.4, 0.0, -3.9), vec3(0.4, 0.9, -3.9), white, false);
+	triangs[25] = triangle(vec3(-0.5, 0.0, -3.9), vec3(0.4, 0.9, -3.9), vec3(-0.5, 0.9, -3.9), white, false);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 
