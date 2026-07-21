@@ -16,9 +16,11 @@ This raytracers uses a shader to run on the gpu instead of the cpu
 
 ## Keybinds
 - WASD to move
+- R to reset position
 - Mouse to look around
 - Espace/C to go up and down
 - Scrollwheel to change vertical FOV
+- P to save current render to render.png
 - Arrow up/down to change defocus angle by 1
 - Arrow left/right to change focus distance by 1
 
