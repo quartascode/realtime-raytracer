@@ -11,7 +11,6 @@ This raytracers uses a shader to run on the gpu instead of the cpu
 
 ## Renders
 ![Image #1](renders/diagonal-night.png)
-![Image #3](renders/glasses.png)
 ![Image #2](renders/spot-light.png)
 
 ## Keybinds
