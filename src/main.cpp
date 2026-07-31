@@ -6,10 +6,10 @@
 
 
 int main(void) {
-	int samplesPerPixel = 3;
+	int samplesPerPixel = 1;
 	float pixelSampleScale = 1.0 / samplesPerPixel;
 
-	int bounceLimit = 20;
+	int bounceLimit = 30;
 
 	int frameIndex = 0;
 

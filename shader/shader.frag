@@ -41,7 +41,7 @@ struct triangle {
 	material material;
 	bool backFaceCull;
 };
-const int TRIANGLE_COUNT = 30;
+const int TRIANGLE_COUNT = 14;
 triangle triangs[TRIANGLE_COUNT];
 
 struct sphere {
@@ -49,7 +49,7 @@ struct sphere {
 	float radius;
 	material material;
 };
-const int SPHERE_COUNT = 11;
+const int SPHERE_COUNT = 8;
 sphere spheres[SPHERE_COUNT];
 
 struct ray {
@@ -478,39 +478,13 @@ void main() {
 
 	// ----------- //
 
-//	spheres[0] = sphere(vec3(-0.65, 0.8, -3.95), 0.5, glass);
-//	spheres[1] = sphere(vec3(-0.1, 3.43, -4.61), 0.5, glass);
-//	spheres[2] = sphere(vec3(0.63, 2.43, -3.6), 0.5, glass);
-//	spheres[3] = sphere(vec3(0, 1.73, -4.8), 0.5, glass);
-//
-//	spheres[4] = sphere(vec3(-0.75, 3.5, -3.5), 0.2, glass);
-//	spheres[5] = sphere(vec3(-0.1, 2.63, -4.61), 0.2, glass);
-//	spheres[6] = sphere(vec3(1.13, 1.63, -3.3), 0.2, glass);
-//	spheres[7] = sphere(vec3(0.3, 0.83, -5.0), 0.2, glass);
+	spheres[0] = sphere(vec3(-0.85, 1.0, -4.2), 0.5, mirror);
 
-	// +X
-	triangs[14] = triangle(vec3(0.4, 0.0, -3.9), vec3(0.4, 0.0, -4.8), vec3(0.4, 0.9, -4.8), white, false);
-	triangs[15] = triangle(vec3(0.4, 0.0, -3.9), vec3(0.4, 0.9, -4.8), vec3(0.4, 0.9, -3.9), white, false);
+	spheres[1] = sphere(vec3(0.3, 0.5, -4.2), 0.5, white);
 
-	// -X
-	triangs[16] = triangle(vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.0, -3.9), vec3(-0.5, 0.9, -3.9), white, false);
-	triangs[17] = triangle(vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.9, -3.9), vec3(-0.5, 0.9, -4.8), white, false);
+	spheres[2] = sphere(vec3(0.3, 1.5, -4.2), 0.5, glass);
 
-	// +Y
-	triangs[18] = triangle(vec3(-0.5, 0.9, -3.9), vec3(0.4, 0.9, -3.9), vec3(0.4, 0.9, -4.8), white, false);
-	triangs[19] = triangle(vec3(-0.5, 0.9, -3.9), vec3(0.4, 0.9, -4.8), vec3(-0.5, 0.9, -4.8), white, false);
-
-	// -Y
-	triangs[20] = triangle(vec3(-0.5, 0.0, -4.8), vec3(0.4, 0.0, -4.8), vec3(0.4, 0.0, -3.9), white, false);
-	triangs[21] = triangle(vec3(-0.5, 0.0, -4.8), vec3(0.4, 0.0, -3.9), vec3(-0.5, 0.0, -3.9), white, false);
-
-	// -Z
-	triangs[22] = triangle(vec3(0.4, 0.0, -4.8), vec3(-0.5, 0.0, -4.8), vec3(-0.5, 0.9, -4.8), white, false);
-	triangs[23] = triangle(vec3(0.4, 0.0, -4.8), vec3(-0.5, 0.9, -4.8), vec3(0.4, 0.9, -4.8), white, false);
-
-	// +Z
-	triangs[24] = triangle(vec3(-0.5, 0.0, -3.9), vec3(0.4, 0.0, -3.9), vec3(0.4, 0.9, -3.9), white, false);
-	triangs[25] = triangle(vec3(-0.5, 0.0, -3.9), vec3(0.4, 0.9, -3.9), vec3(-0.5, 0.9, -3.9), white, false);
+	spheres[3] = sphere(vec3(-0.7, 3.5, -4.2), 0.5, mirror);
 
 	rngState = uint(pixel.y) * uint(1920) + uint(pixel.x) + uint(frameIndex) * 0x9e3779b9u;
 

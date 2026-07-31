@@ -10,9 +10,9 @@ This raytracers uses a shader to run on the gpu instead of the cpu
 - Triangle intersection (no mesh/model support yet, and also no BVH)
 
 ## Renders
-![Image #1](renders/diagonal-night.png)
-![Image #2](renders/glasses.png)
-![Image #3](renders/spot-light.png)
+![Image #1](renders/glasses.png)
+![Image #2](renders/diagonal-night.png)
+![Image #3](renders/cornell-box-balls.png)
 
 ## Keybinds
 - WASD to move
